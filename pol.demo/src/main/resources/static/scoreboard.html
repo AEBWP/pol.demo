@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hockey Scoreboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #05050f;
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* TOP BAR */
+  #topbar {
+    background: linear-gradient(135deg, #0b1a3a 0%, #0d2060 50%, #0b1a3a 100%);
+    border-bottom: 3px solid #1a5fe8;
+    padding: 0.4vh 3vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #tournament-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2.2vh;
+    font-weight: 600;
+    color: #a0c4ff;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  #status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ff4444;
+    box-shadow: 0 0 8px #ff4444;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  /* MAIN SCORE AREA */
+  #main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 1vh 2vw;
+    gap: 1vw;
+  }
+
+  /* TEAM BLOCK */
+  .team-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5vh;
+    height: 100%;
+  }
+  .team-block.home { border-right: 2px solid #1a3a7a; }
+  .team-block.away { border-left: 2px solid #1a3a7a; }
+
+  .team-name {
+    font-size: 7.5vh;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 0 30px rgba(26,95,232,0.4);
+    line-height: 1;
+  }
+
+  .score {
+    font-size: 22vh;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 0 60px rgba(26,95,232,0.6), 0 4px 20px rgba(0,0,0,0.8);
+    transition: transform 0.15s ease, color 0.3s;
+    font-variant-numeric: tabular-nums;
+  }
+  .score.goal-flash {
+    transform: scale(1.12);
+    color: #ffd700 !important;
+    text-shadow: 0 0 80px rgba(255,215,0,0.9) !important;
+  }
+
+  .power-play-badge {
+    background: linear-gradient(135deg, #5a3000, #8a5000);
+    border: 1px solid #ffa500;
+    border-radius: 4px;
+    padding: 0.3vh 1vw;
+    font-size: 1.6vh;
+    color: #ffc844;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(255,200,68,0.5);
+  }
+
+  /* CENTER PANEL */
+  #center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5vh;
+    min-width: 20vw;
+  }
+  #period-display {
+    background: linear-gradient(135deg, #0d2060, #1a5fe8);
+    border: 2px solid #1a5fe8;
+    border-radius: 8px;
+    padding: 0.8vh 2.5vw;
+    font-size: 3.5vh;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-align: center;
+    min-width: 12vw;
+    box-shadow: 0 0 20px rgba(26,95,232,0.3);
+  }
+  #separator-line {
+    width: 80%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #1a5fe8, transparent);
+  }
+  #clock {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12vh;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  #clock.stopped { color: #ff4444; text-shadow: 0 0 40px rgba(255,68,68,0.3); }
+  #clock.running { color: #ffffff; text-shadow: 0 0 40px rgba(255,255,255,0.15); }
+
+  #shootout-display {
+    display: none;
+    text-align: center;
+    font-size: 3.5vh;
+    color: #a0c4ff;
+    letter-spacing: 0.2em;
+  }
+
+  /* PENALTIES */
+  #penalties-row {
+    background: linear-gradient(180deg, #070716 0%, #0a0a1a 100%);
+    border-top: 2px solid #1a3a7a;
+    padding: 1.2vh 3vw;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2vw;
+    flex-shrink: 0;
+    min-height: 10vh;
+  }
+  .penalty-side { display: flex; gap: 1.5vw; align-items: center; }
+  .penalty-side.away { justify-content: flex-end; }
+
+  .penalty-card {
+    background: linear-gradient(135deg, #1a0000, #3a0000);
+    border: 1px solid #cc2200;
+    border-radius: 6px;
+    padding: 0.6vh 1.2vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 8vw;
+    box-shadow: 0 0 12px rgba(204,34,0,0.3);
+  }
+  .penalty-player {
+    font-size: 2vh;
+    font-weight: 600;
+    color: #ffaa88;
+    letter-spacing: 0.1em;
+  }
+  .penalty-player::before { content: '#'; font-size: 1.4vh; color: #cc6644; }
+  .penalty-time {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 3.5vh;
+    font-weight: 700;
+    color: #ff6644;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .penalty-label { font-size: 1.2vh; color: #884444; letter-spacing: 0.15em; }
+
+  /* GOAL FLASH */
+  #goal-flash-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    border: 8px solid #ffd700;
+    box-shadow: inset 0 0 80px rgba(255,215,0,0.3);
+  }
+  @keyframes goalBorder {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* DISCONNECTED */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+  }
+  #overlay.show { display: flex; }
+  #overlay-text {
+    font-size: 4vh;
+    color: #ff4444;
+    letter-spacing: 0.2em;
+    animation: pulse 1s ease-in-out infinite alternate;
+  }
+  @keyframes pulse { from { opacity: 0.5; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="tournament-name">HOCKEY</div>
+  <div style="font-size:2vh">🏒</div>
+  <div id="status-dot"></div>
+</div>
+
+<div id="main">
+  <div class="team-block home">
+    <div class="team-name" id="home-name">HOME</div>
+    <div class="score" id="home-score">0</div>
+    <div id="home-pp" style="display:none" class="power-play-badge">POWER PLAY</div>
+  </div>
+
+  <div id="center">
+    <div id="period-display">1° PERIODO</div>
+    <div id="separator-line"></div>
+    <div id="clock" class="stopped">20:00</div>
+    <div id="shootout-display">SHOOTOUT</div>
+  </div>
+
+  <div class="team-block away">
+    <div class="team-name" id="away-name">AWAY</div>
+    <div class="score" id="away-score">0</div>
+    <div id="away-pp" style="display:none" class="power-play-badge">POWER PLAY</div>
+  </div>
+</div>
+
+<div id="penalties-row">
+  <div class="penalty-side home" id="home-penalties"></div>
+  <div class="penalty-side away" id="away-penalties"></div>
+</div>
+
+<div id="overlay"><div id="overlay-text">CONNESSIONE PERSA...</div></div>
+<div id="goal-flash-overlay"></div>
+
+<script>
+  let prevHomeScore = -1;
+  let prevAwayScore = -1;
+  let evtSource = null;
+
+  function formatTime(s) {
+    if (s <= 0) return '00:00';
+    return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+  }
+
+  function periodLabel(p) {
+    return {1:'1° PERIODO', 2:'2° PERIODO', 3:'3° PERIODO', 4:'OVERTIME', 5:'SHOOTOUT'}[p] || p + '° PERIODO';
+  }
+
+  function renderPenalties(id, list) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    (list || []).forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'penalty-card';
+      card.innerHTML = `<div class="penalty-player">${p.playerNumber}</div>
+        <div class="penalty-time">${formatTime(p.remainingSeconds)}</div>
+        <div class="penalty-label">PENALITÀ</div>`;
+      el.appendChild(card);
+    });
+  }
+
+  function flashGoal() {
+    const o = document.getElementById('goal-flash-overlay');
+    o.style.display = 'block';
+    o.style.animation = 'none';
+    o.offsetHeight;
+    o.style.animation = 'goalBorder 1.5s ease-out forwards';
+    setTimeout(() => { o.style.display = 'none'; }, 1500);
+  }
+
+  function updateUI(state) {
+    document.getElementById('tournament-name').textContent = state.tournamentName || 'HOCKEY';
+    document.getElementById('home-name').textContent = state.homeTeam;
+    document.getElementById('away-name').textContent = state.awayTeam;
+
+    if (prevHomeScore >= 0 && state.homeScore !== prevHomeScore) {
+      const el = document.getElementById('home-score');
+      el.classList.add('goal-flash');
+      setTimeout(() => el.classList.remove('goal-flash'), 600);
+      flashGoal();
+    }
+    if (prevAwayScore >= 0 && state.awayScore !== prevAwayScore) {
+      const el = document.getElementById('away-score');
+      el.classList.add('goal-flash');
+      setTimeout(() => el.classList.remove('goal-flash'), 600);
+      flashGoal();
+    }
+
+    document.getElementById('home-score').textContent = state.homeScore;
+    document.getElementById('away-score').textContent = state.awayScore;
+    prevHomeScore = state.homeScore;
+    prevAwayScore = state.awayScore;
+
+    document.getElementById('period-display').textContent = periodLabel(state.period);
+
+    const clockEl = document.getElementById('clock');
+    const shootoutEl = document.getElementById('shootout-display');
+    if (state.period === 5) {
+      clockEl.style.display = 'none';
+      shootoutEl.style.display = 'block';
+    } else {
+      clockEl.style.display = 'block';
+      shootoutEl.style.display = 'none';
+      clockEl.textContent = formatTime(state.clockSeconds);
+      clockEl.className = state.clockRunning ? 'running' : 'stopped';
+    }
+
+    renderPenalties('home-penalties', state.homePenalties);
+    renderPenalties('away-penalties', state.awayPenalties);
+
+    document.getElementById('home-pp').style.display =
+      (state.awayPenalties && state.awayPenalties.length > 0) ? 'block' : 'none';
+    document.getElementById('away-pp').style.display =
+      (state.homePenalties && state.homePenalties.length > 0) ? 'block' : 'none';
+  }
+
+  function connect() {
+    if (evtSource) evtSource.close();
+    evtSource = new EventSource('/api/scoreboard/events');
+
+    evtSource.addEventListener('state', e => {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('status-dot').style.cssText = 'background:#22c55e;box-shadow:0 0 8px #22c55e';
+      updateUI(JSON.parse(e.data));
+    });
+
+    evtSource.onerror = () => {
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('status-dot').style.cssText = 'background:#ff4444;box-shadow:0 0 8px #ff4444';
+      evtSource.close();
+      setTimeout(connect, 3000);
+    };
+  }
+
+  connect();
+</script>
+</body>
+</html>
